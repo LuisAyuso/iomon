@@ -258,7 +258,10 @@ fn draw_chart(
                 .labels(["0".to_string(), fmt(max / 2.0), fmt(max)])
                 .style(Style::new().dark_gray()),
         )
-        .legend_position(Some(ratatui::widgets::LegendPosition::TopLeft));
+        .legend_position(Some(ratatui::widgets::LegendPosition::TopLeft))
+        // Default hides the legend when it exceeds 1/4 of the area, which makes it
+        // flicker as the live values in the labels change width.
+        .hidden_legend_constraints((Constraint::Percentage(100), Constraint::Percentage(100)));
     f.render_widget(chart, area);
 }
 
