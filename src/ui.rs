@@ -36,7 +36,13 @@ pub fn draw(f: &mut Frame, app: &App) {
 
     let charts = Layout::horizontal([Constraint::Percentage(50), Constraint::Percentage(50)])
         .split(areas.next().unwrap());
-    if let Some(d) = disks.get(app.disk_sel) {
+    if app.chart_array {
+        if let Some(a) = arrays.get(app.array_sel) {
+            let title = format!(" {} history (sum of {} drives) ", a.name, a.members.len());
+            let history = app.disks.array_history(a);
+            draw_chart(f, charts[0], &title, &history, ("read", "write"), app, fmt_bytes_rate);
+        }
+    } else if let Some(d) = disks.get(app.disk_sel) {
         let title = format!(" {} history ", d.name);
         draw_chart(f, charts[0], &title, &d.history, ("read", "write"), app, fmt_bytes_rate);
     }
@@ -120,6 +126,7 @@ fn draw_disks(f: &mut Frame, area: Rect, app: &App) {
 }
 
 fn draw_arrays(f: &mut Frame, area: Rect, app: &App) {
+    let focused = app.focus == Focus::Arrays;
     let rows = app.disks.arrays.iter().map(|a| {
         let state_style = if a.state.contains("DEGRADED") {
             Style::new().fg(Color::Red).bold()
@@ -154,8 +161,10 @@ fn draw_arrays(f: &mut Frame, area: Rect, app: &App) {
         ],
     )
     .header(header(&["Array", "Kind", "Level", "State", "Read/s", "Write/s", "Member drives"]))
-    .block(block(" RAID arrays ", false));
-    f.render_widget(table, area);
+    .block(block(" RAID arrays ", focused))
+    .row_highlight_style(highlight());
+    let mut state = TableState::default().with_selected(focused.then_some(app.array_sel));
+    f.render_stateful_widget(table, area, &mut state);
 }
 
 fn draw_net(f: &mut Frame, area: Rect, app: &App) {

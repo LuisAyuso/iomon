@@ -221,6 +221,25 @@ impl DiskMonitor {
     }
 }
 
+impl DiskMonitor {
+    /// Read/write history of an array, summed over its member drives.
+    /// Histories are aligned on the most recent sample, since a member may
+    /// have appeared later than the others.
+    pub fn array_history(&self, a: &Array) -> VecDeque<(f64, f64)> {
+        let members: Vec<&Disk> = self.disks.iter().filter(|d| a.members.contains(&d.name)).collect();
+        let len = members.iter().map(|d| d.history.len()).max().unwrap_or(0);
+        let mut out: VecDeque<(f64, f64)> = std::iter::repeat((0.0, 0.0)).take(len).collect();
+        for d in members {
+            let skip = len - d.history.len();
+            for (i, &(r, w)) in d.history.iter().enumerate() {
+                out[skip + i].0 += r;
+                out[skip + i].1 += w;
+            }
+        }
+        out
+    }
+}
+
 impl Disk {
     fn probe(name: &str) -> Self {
         let sys = Path::new("/sys/block").join(name);
