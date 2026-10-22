@@ -85,3 +85,7 @@ section was focused last; the right chart follows the selected interface.
 cargo build
 cargo test   # renders the UI against the live system
 ```
+
+## License
+
+[WTFPL](LICENSE) — Do What The Fuck You Want To Public License, Version 2.
